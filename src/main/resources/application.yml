@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: spring-jpa-baseline
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.id.new_generator_mappings: true
+      hibernate.cache.use_query_cache: false
+      hibernate.hbm2ddl.auto: update
+      hibernate.hbm2ddl.export.sql: true
+      hibernate.hbm2ddl.import_files: schema.sql
+      hibernate.generate_statistics: false
+  datasource:
+    url: jdbc:h2:mem:staydb

@@ -36,7 +36,9 @@ public class SchemaExportMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException {
-        ApplicationContext context = new SpringApplicationBuilder()
+
+        ApplicationContext context = Application.runner(ClassLoader.getInstance().getMainClass(this.project));
+        /*ApplicationContext context = new SpringApplicationBuilder()
                 .sources(ClassLoader.getInstance().getMainClass(this.project))
                 .properties("spring.config.location=" + configFile)
                 .run();
@@ -57,6 +59,6 @@ public class SchemaExportMojo extends AbstractMojo {
         schemaExport.setDelimiter(";");
 
         schemaExport.setFormat(true);
-        schemaExport.setHaltOnError(true);
+        schemaExport.setHaltOnError(true);*/
     }
 }
