@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.snw.schema.exporter;
+package com.snw.schema.exporter.runner;
 
 import com.agapsys.mvn.scanner.SourceDirectoryScanner;
 import com.agapsys.mvn.scanner.parser.AnnotationInfo;
@@ -26,7 +26,7 @@ import com.agapsys.mvn.scanner.parser.Visibility;
  */
 public class SourceScanner extends SourceDirectoryScanner {
 
-    private static final String SPRING_MAIN     = "org.springframework.boot.autoconfigure.SpringBootApplication";
+    private static final String SPRING_MAIN = "org.springframework.boot.autoconfigure.SpringBootApplication";
 
     private static SourceScanner SINGLETON = new SourceScanner();
 
@@ -39,14 +39,12 @@ public class SourceScanner extends SourceDirectoryScanner {
             if (annotationInfo.className.equals(annotationClassName))
                 return true;
         }
-
         return false;
     }
 
     @Override
     protected boolean shallBeIncluded(ClassInfo classInfo) throws ParsingException {
         boolean accessible = true;
-
         ClassInfo currentClassInfo = classInfo;
         do {
             if (currentClassInfo.visibility != Visibility.PUBLIC) {
@@ -60,9 +58,7 @@ public class SourceScanner extends SourceDirectoryScanner {
         if (!accessible)
             return false;
 
-        boolean hasEntityAnnotation = containsAnnotationClass(classInfo, SPRING_MAIN);
-
-        return (hasEntityAnnotation);
+        return containsAnnotationClass(classInfo, SPRING_MAIN);
     }
 
     @Override

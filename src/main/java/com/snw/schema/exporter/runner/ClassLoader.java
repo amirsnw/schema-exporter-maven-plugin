@@ -1,7 +1,6 @@
 package com.snw.schema.exporter.runner;
 
 import com.agapsys.mvn.scanner.parser.ClassInfo;
-import com.snw.schema.exporter.SourceScanner;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.project.MavenProject;
 
@@ -13,50 +12,58 @@ import java.util.List;
 
 public class ClassLoader {
 
-    List<String> allClasses = new ArrayList<>();
-    private String targetPackagePath;
-    private static ClassLoader SINGLETON = new ClassLoader();
+    private static ClassLoader INSTANCE = new ClassLoader();
 
     public static ClassLoader getInstance() {
-        return SINGLETON;
+        return INSTANCE;
     }
 
     private java.lang.ClassLoader getClassLoader(MavenProject project) {
 
+        String element;
+        File directory;
+        URL[] urls;
+        List<String> classpathElements;
         try {
-            List classpathElements = project.getCompileClasspathElements();
-            classpathElements.add( project.getBuild().getOutputDirectory() );
-            classpathElements.add( project.getBuild().getTestOutputDirectory() );
-            URL urls[] = new URL[classpathElements.size()];
-            for ( int i = 0; i < classpathElements.size(); ++i) {
-                File directory = new File((String) classpathElements.get(i));
-                if (classpathElements.get(i).toString().contains("target")) {
-                    targetPackagePath =  classpathElements.get(i).toString();
-                }
+            classpathElements = project.getCompileClasspathElements();
+            classpathElements.add(project.getBuild().getOutputDirectory());
+            classpathElements.add(project.getBuild().getTestOutputDirectory());
+
+            urls = new URL[classpathElements.size()];
+            for (int i = 0 ; i < classpathElements.size() ; ++i) {
+                element = classpathElements.get(i);
+                directory = new File(element);
                 urls[i] = directory.toURL();
             }
-            return new URLClassLoader( urls, this.getClass().getClassLoader() );
-        } catch ( Exception e ) {
+            return new URLClassLoader(urls, this.getClass().getClassLoader());
+        } catch (Exception e) {
             return this.getClass().getClassLoader();
         }
     }
 
-    public Class<?> getMainClass(MavenProject project) throws MojoExecutionException {
+    public ProjectModel getProjectModel(MavenProject project, String targetDirectory)
+            throws MojoExecutionException {
         try {
-            ClassInfo classInfo = SourceScanner.getInstance()
+            ClassInfo mainClassInfo = SourceScanner.getInstance()
                     .getFilteredClasses(new File("src/main/java")).stream()
                     .findFirst().orElseThrow(IllegalStateException::new);
             java.lang.ClassLoader classLoader = getClassLoader(project);
-            allClasses = getClassNamesInPackage("C:\\Snowman\\spring-jpa-baseline\\target");
-            for (String className : allClasses) {
-                if (classInfo.className.equals(className))
-                    continue;
-                classLoader.loadClass(className);
-            }
-            return classLoader.loadClass(classInfo.className);
+
+            ProjectModel ProjectModel = new ProjectModel(classLoader.loadClass(mainClassInfo.className),
+                    loadAllClasses(classLoader, targetDirectory));
+            return ProjectModel;
         } catch (Exception e) {
             throw new MojoExecutionException("Main class not found!");
         }
+    }
+
+    private Class[] loadAllClasses(java.lang.ClassLoader classLoader,
+                                String targetDirectory) throws ClassNotFoundException {
+        List<Class> allClasses = new ArrayList<>();
+        for (String className : getClassNamesInPackage(targetDirectory)) {
+            allClasses.add(classLoader.loadClass(className));
+        }
+        return allClasses.toArray(new Class[0]);
     }
 
     public static List<String> getClassNamesInPackage(String packageName) throws ClassNotFoundException {
